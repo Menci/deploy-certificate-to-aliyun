@@ -26,5 +26,5 @@ inputs:
     description: Enter a list of CDN domains you want to deploy the certificate to.
     required: true
 runs:
-  using: node12
+  using: node16
   main: bootstrap.js
