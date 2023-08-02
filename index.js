@@ -11,7 +11,9 @@ const input = {
   fullchainFile: core.getInput("fullchain-file"),
   keyFile: core.getInput("key-file"),
   certificateName: core.getInput("certificate-name"),
-  cdnDomains: core.getInput("cdn-domains")
+  cdnDomains: core.getInput("cdn-domains"),
+  timeout: core.getInput("timeout") || 10000,
+  retry: core.getInput("retry") || 3,
 };
 
 /**
@@ -20,21 +22,33 @@ const input = {
  * @param {string} action
  * @param {Record<string, unknown>} params
  */
-function callAliyunApi(endpoint, apiVersion, action, params) {
-  return new AliyunClient({
-    ...input.accessKeyId && input.accessKeySecret ? {
-      accessKeyId: input.accessKeyId,
-      accessKeySecret: input.accessKeySecret
-    } : {},
-    ...input.securityToken ? {
-      securityToken: input.securityToken
-    } : {},
-    endpoint,
-    apiVersion
-  }).request(action, params, { method: "POST" });
+function callAliyunApi (endpoint, apiVersion, action, params) {
+  return new Promise((resolve, reject) => {
+    let retryTimes = 0;
+    const client = new AliyunClient({
+      ...input.accessKeyId && input.accessKeySecret ? {
+        accessKeyId: input.accessKeyId,
+        accessKeySecret: input.accessKeySecret
+      } : {},
+      ...input.securityToken ? {
+        securityToken: input.securityToken
+      } : {},
+      endpoint,
+      apiVersion
+    });
+
+    client
+      .request(action, params, { method: "POST", timeout: input.timeout })
+      .then(() => resolve())
+      .catch(error => {
+        console.log(`Aliyun Client Error ${++retryTimes}/${input.retry}`, error)
+        if (retryTimes >= input.retry) reject(error);
+        return client.request(action, params, { method: "POST", timeout: input.timeout });
+      });
+  });
 }
 
-async function deletePreviouslyDeployedCertificate() {
+async function deletePreviouslyDeployedCertificate () {
   /**
    * @typedef CertificateListItem
    * @prop {number} id
@@ -48,7 +62,7 @@ async function deletePreviouslyDeployedCertificate() {
   /**
    * @param {(item: CertificateListItem) => Promise<void>} callback
    */
-  async function listCertificates(callback) {
+  async function listCertificates (callback) {
     let currentItems = 0;
 
     for (let i = 1; ; i++) {
@@ -95,7 +109,7 @@ async function deletePreviouslyDeployedCertificate() {
   );
 }
 
-async function deployCertificate() {
+async function deployCertificate () {
   const fullchain = fs.readFileSync(input.fullchainFile, "utf-8");
   const key = fs.readFileSync(input.keyFile, "utf-8");
 
@@ -112,9 +126,9 @@ async function deployCertificate() {
   );
 }
 
-async function deployCertificateToCdn() {
+async function deployCertificateToCdn () {
   const domains = Array.from(new Set(input.cdnDomains.split(/\s+/).filter(x => x)));
-  
+
   for (const domain of domains) {
     console.log(`Deploying certificate to CDN domain ${domain}.`);
 
@@ -132,7 +146,7 @@ async function deployCertificateToCdn() {
   }
 }
 
-async function main() {
+async function main () {
   await deployCertificate();
 
   if (input.cdnDomains) await deployCertificateToCdn();
