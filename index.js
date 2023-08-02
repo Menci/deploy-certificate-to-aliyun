@@ -12,8 +12,8 @@ const input = {
   keyFile: core.getInput("key-file"),
   certificateName: core.getInput("certificate-name"),
   cdnDomains: core.getInput("cdn-domains"),
-  timeout: core.getInput("timeout") || 10000,
-  retry: core.getInput("retry") || 3,
+  timeout: parseInt(core.getInput("timeout")) || 10000,
+  retry: parseInt(core.getInput("retry")) || 3,
 };
 
 /**
@@ -22,7 +22,7 @@ const input = {
  * @param {string} action
  * @param {Record<string, unknown>} params
  */
-function callAliyunApi (endpoint, apiVersion, action, params) {
+function callAliyunApi(endpoint, apiVersion, action, params) {
   return new Promise((resolve, reject) => {
     let retryTimes = 0;
     const client = new AliyunClient({
@@ -49,7 +49,7 @@ function callAliyunApi (endpoint, apiVersion, action, params) {
   });
 }
 
-async function deletePreviouslyDeployedCertificate () {
+async function deletePreviouslyDeployedCertificate() {
   /**
    * @typedef CertificateListItem
    * @prop {number} id
@@ -63,7 +63,7 @@ async function deletePreviouslyDeployedCertificate () {
   /**
    * @param {(item: CertificateListItem) => Promise<void>} callback
    */
-  async function listCertificates (callback) {
+  async function listCertificates(callback) {
     let currentItems = 0;
 
     for (let i = 1; ; i++) {
@@ -110,7 +110,7 @@ async function deletePreviouslyDeployedCertificate () {
   );
 }
 
-async function deployCertificate () {
+async function deployCertificate() {
   const fullchain = fs.readFileSync(input.fullchainFile, "utf-8");
   const key = fs.readFileSync(input.keyFile, "utf-8");
 
@@ -127,7 +127,7 @@ async function deployCertificate () {
   );
 }
 
-async function deployCertificateToCdn () {
+async function deployCertificateToCdn() {
   const domains = Array.from(new Set(input.cdnDomains.split(/\s+/).filter(x => x)));
 
   for (const domain of domains) {
@@ -147,7 +147,7 @@ async function deployCertificateToCdn () {
   }
 }
 
-async function main () {
+async function main() {
   await deployCertificate();
 
   if (input.cdnDomains) await deployCertificateToCdn();
