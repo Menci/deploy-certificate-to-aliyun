@@ -43,4 +43,10 @@ jobs:
           cdn-domains: |
             cdn1.example.com
             cdn2.example.com
+        
+          # (Optional) API request timeout
+          timeout: 10
+
+          # (Optional) API request attempt times
+          retry: 3
 ```
