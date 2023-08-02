@@ -25,6 +25,12 @@ inputs:
   cdn-domains:
     description: Enter a list of CDN domains you want to deploy the certificate to.
     required: true
+  timeout:
+    description: Determine the timeout for sending requests to the Aliyun API
+    default: '10000'
+  retry:
+    description: Determine the maximum number of retries after failed request
+    default: '3'
 runs:
   using: node16
   main: bootstrap.js

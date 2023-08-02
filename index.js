@@ -11,7 +11,9 @@ const input = {
   fullchainFile: core.getInput("fullchain-file"),
   keyFile: core.getInput("key-file"),
   certificateName: core.getInput("certificate-name"),
-  cdnDomains: core.getInput("cdn-domains")
+  cdnDomains: core.getInput("cdn-domains"),
+  timeout: parseInt(core.getInput("timeout")) || 10000,
+  retry: parseInt(core.getInput("retry")) || 3,
 };
 
 /**
@@ -21,17 +23,30 @@ const input = {
  * @param {Record<string, unknown>} params
  */
 function callAliyunApi(endpoint, apiVersion, action, params) {
-  return new AliyunClient({
-    ...input.accessKeyId && input.accessKeySecret ? {
-      accessKeyId: input.accessKeyId,
-      accessKeySecret: input.accessKeySecret
-    } : {},
-    ...input.securityToken ? {
-      securityToken: input.securityToken
-    } : {},
-    endpoint,
-    apiVersion
-  }).request(action, params, { method: "POST" });
+  return new Promise((resolve, reject) => {
+    let retryTimes = 0;
+    const client = new AliyunClient({
+      ...input.accessKeyId && input.accessKeySecret ? {
+        accessKeyId: input.accessKeyId,
+        accessKeySecret: input.accessKeySecret
+      } : {},
+      ...input.securityToken ? {
+        securityToken: input.securityToken
+      } : {},
+      endpoint,
+      apiVersion
+    });
+
+    const request = () => client
+      .request(action, params, { method: "POST", timeout: input.timeout })
+      .then(resolve)
+      .catch(error => {
+        console.log(`Aliyun Client Error ${++retryTimes}/${input.retry}`, error)
+        if (retryTimes >= input.retry) reject(error);
+        request();
+      });
+    request();
+  });
 }
 
 async function deletePreviouslyDeployedCertificate() {
@@ -114,7 +129,7 @@ async function deployCertificate() {
 
 async function deployCertificateToCdn() {
   const domains = Array.from(new Set(input.cdnDomains.split(/\s+/).filter(x => x)));
-  
+
   for (const domain of domains) {
     console.log(`Deploying certificate to CDN domain ${domain}.`);
 
