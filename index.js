@@ -39,7 +39,7 @@ function callAliyunApi (endpoint, apiVersion, action, params) {
 
     client
       .request(action, params, { method: "POST", timeout: input.timeout })
-      .then(() => resolve())
+      .then(resolve)
       .catch(error => {
         console.log(`Aliyun Client Error ${++retryTimes}/${input.retry}`, error)
         if (retryTimes >= input.retry) reject(error);
