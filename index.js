@@ -45,6 +45,7 @@ function callAliyunApi (endpoint, apiVersion, action, params) {
         if (retryTimes >= input.retry) reject(error);
         request();
       });
+    request();
   });
 }
 
