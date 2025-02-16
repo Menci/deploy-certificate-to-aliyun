@@ -14,6 +14,8 @@ const input = {
   cdnDomains: core.getInput("cdn-domains"),
   timeout: parseInt(core.getInput("timeout")) || 10000,
   retry: parseInt(core.getInput("retry")) || 3,
+  casEndpoint: core.getInput("cas-endpoint") || 'https://cas.aliyuncs.com',
+  cdnEndpoint: core.getInput("cdn-endpoint") || 'https://cdn.aliyuncs.com'
 };
 
 /**
@@ -71,7 +73,7 @@ async function deletePreviouslyDeployedCertificate() {
        * @type {DescribeUserCertificateListResponse}
        */
       const response = await callAliyunApi(
-        "https://cas.aliyuncs.com", "2018-07-13",
+        input.casEndpoint, "2018-07-13",
         "DescribeUserCertificateList",
         {
           ShowSize: 50,
@@ -102,7 +104,7 @@ async function deletePreviouslyDeployedCertificate() {
   console.log(`Found previously deployed certificate ${foundId}. Deleting.`);
 
   await callAliyunApi(
-    "https://cas.aliyuncs.com", "2018-07-13",
+    input.casEndpoint, "2018-07-13",
     "DeleteUserCertificate",
     {
       CertId: foundId
@@ -117,7 +119,7 @@ async function deployCertificate() {
   await deletePreviouslyDeployedCertificate();
 
   await callAliyunApi(
-    "https://cas.aliyuncs.com", "2018-07-13",
+    input.casEndpoint, "2018-07-13",
     "CreateUserCertificate",
     {
       Cert: fullchain,
@@ -134,7 +136,7 @@ async function deployCertificateToCdn() {
     console.log(`Deploying certificate to CDN domain ${domain}.`);
 
     await callAliyunApi(
-      "https://cdn.aliyuncs.com", "2018-05-10",
+      input.cdnEndpoint, "2018-05-10",
       "SetDomainServerCertificate",
       {
         DomainName: domain,

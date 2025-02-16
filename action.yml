@@ -31,6 +31,12 @@ inputs:
   retry:
     description: Determine the maximum number of retries after failed request
     default: '3'
+  cas-endpoint:
+    description: "The endpoint of the Aliyun Certificates Service. Endpoint list: https://api.aliyun.com/product/cas"
+    default: 'https://cas.aliyuncs.com'
+  cdn-endpoint:
+    description: "The endpoint of the Aliyun CDN Service. Endpoint list: https://api.aliyun.com/product/cdn"
+    default: 'https://cdn.aliyuncs.com'
 runs:
   using: node16
   main: bootstrap.js
