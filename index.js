@@ -14,8 +14,8 @@ const input = {
   cdnDomains: core.getInput("cdn-domains"),
   timeout: parseInt(core.getInput("timeout")) || 10000,
   retry: parseInt(core.getInput("retry")) || 3,
-  casEndpoint: core.getInput("cas-endpoint") || 'https://cas.aliyuncs.com',
-  cdnEndpoint: core.getInput("cdn-endpoint") || 'https://cdn.aliyuncs.com'
+  casEndpoint: core.getInput("cas-endpoint") || 'https://cas.ap-southeast-1.aliyuncs.com',
+  cdnEndpoint: core.getInput("cdn-endpoint") || 'https://cdn.ap-southeast-1.aliyuncs.com'
 };
 
 /**
