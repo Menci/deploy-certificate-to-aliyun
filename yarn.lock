@@ -16,16 +16,16 @@
   dependencies:
     tunnel "0.0.6"
 
-"@alicloud/pop-core@^1.7.10":
-  version "1.7.10"
-  resolved "https://registry.yarnpkg.com/@alicloud/pop-core/-/pop-core-1.7.10.tgz#d0e221036dbb0ccde453dd09b1cfabd8341b7a69"
-  integrity sha512-9/aLWgmgaAdB1ERNTpdOvF7wueLY5CDTRxKZr93x542iuYRA1NDpcKslFqLOy5CUOa0CbopET3JGaHSAz5qv9g==
+"@alicloud/pop-core@^1.8.0":
+  version "1.8.0"
+  resolved "https://registry.npmjs.org/@alicloud/pop-core/-/pop-core-1.8.0.tgz#df5d4ce581fd15f964c5e00afe3ad2e417ee47a4"
+  integrity sha512-ef6vIVigtr9n8Lw6Ld2GZ9jVUD0+ReHviaQaMqZDPI2HwdpVvrq1Rvn2tBnFToe0tdTpovz9N7XFSf/C274OtA==
   dependencies:
     debug "^3.1.0"
     httpx "^2.1.2"
     json-bigint "^1.0.0"
     kitx "^1.2.1"
-    xml2js "^0.4.17"
+    xml2js "^0.5.0"
 
 "@types/node@^14":
   version "14.17.27"
@@ -91,10 +91,10 @@ tunnel@0.0.6:
   resolved "https://registry.yarnpkg.com/tunnel/-/tunnel-0.0.6.tgz#72f1314b34a5b192db012324df2cc587ca47f92c"
   integrity sha512-1h/Lnq9yajKY2PEbBadPXj3VxsDDu844OnaAo52UVmIzIvwwtBPIuNvkjuzBlTWpfJyUbG3ez0KSBibQkj4ojg==
 
-xml2js@^0.4.17:
-  version "0.4.23"
-  resolved "https://registry.yarnpkg.com/xml2js/-/xml2js-0.4.23.tgz#a0c69516752421eb2ac758ee4d4ccf58843eac66"
-  integrity sha512-ySPiMjM0+pLDftHgXY4By0uswI3SPKLDw/i3UXbnO8M/p28zqexCUoPmQFrYD+/1BzhGJSs2i1ERWKJAtiLrug==
+xml2js@^0.5.0:
+  version "0.5.0"
+  resolved "https://registry.npmjs.org/xml2js/-/xml2js-0.5.0.tgz#d9440631fbb2ed800203fad106f2724f62c493b7"
+  integrity sha512-drPFnkQJik/O+uPKpqSgr22mpuFHqKdbS835iAQrUC73L2F5WkboIRd63ai/2Yg6I1jzifPFKH2NTK+cfglkIA==
   dependencies:
     sax ">=0.6.0"
     xmlbuilder "~11.0.0"

@@ -2,7 +2,7 @@ const fs = require("fs");
 
 const core = require("@actions/core");
 
-const AliyunClient = require('@alicloud/pop-core');
+const AliyunClient = require("@alicloud/pop-core");
 
 const input = {
   accessKeyId: core.getInput("access-key-id"),
@@ -14,8 +14,8 @@ const input = {
   cdnDomains: core.getInput("cdn-domains"),
   timeout: parseInt(core.getInput("timeout")) || 10000,
   retry: parseInt(core.getInput("retry")) || 3,
-  casEndpoint: core.getInput("cas-endpoint") || 'https://cas.ap-southeast-1.aliyuncs.com',
-  cdnEndpoint: core.getInput("cdn-endpoint") || 'https://cdn.ap-southeast-1.aliyuncs.com'
+  casEndpoint: core.getInput("cas-endpoint") || "https://cas.ap-southeast-1.aliyuncs.com",
+  cdnEndpoint: core.getInput("cdn-endpoint") || "https://cdn.ap-southeast-1.aliyuncs.com"
 };
 
 /**
@@ -53,46 +53,51 @@ function callAliyunApi(endpoint, apiVersion, action, params) {
 
 async function deletePreviouslyDeployedCertificate() {
   /**
-   * @typedef CertificateListItem
-   * @prop {number} id
-   * @prop {string} name
+   * @typedef CertificateOrderListItem
+   * @prop {number} CertificateId
+   * @prop {string} Name
    * 
-   * @typedef DescribeUserCertificateListResponse
+   * @typedef ListUserCertificateOrderResponse
    * @prop {number} TotalCount
-   * @prop {CertificateListItem[]} CertificateList
+   * @prop {CertificateOrderListItem[]} CertificateOrderList
    */
 
   /**
-   * @param {(item: CertificateListItem) => Promise<void>} callback
+   * @param {(item: CertificateOrderListItem) => Promise<void>} callback
    */
   async function listCertificates(callback) {
-    let currentItems = 0;
+    const ALL_STATUS = ["ISSUED", "WILLEXPIRED", "EXPIRED"];
+    for (const status of ALL_STATUS) {
+      let currentItems = 0;
+      for (let i = 1; ; i++) {
+        console.log(`ListUserCertificateOrder: status = ${status}, page = ${i}.`);
+        /**
+         * @type {ListUserCertificateOrderResponse}
+         */
+        const response = await callAliyunApi(
+          input.casEndpoint, "2020-04-07",
+          "ListUserCertificateOrder",
+          {
+            Status: status,
+            OrderType: "CERT",
+            ShowSize: 50,
+            CurrentPage: i
+          }
+        );
 
-    for (let i = 1; ; i++) {
-      /**
-       * @type {DescribeUserCertificateListResponse}
-       */
-      const response = await callAliyunApi(
-        input.casEndpoint, "2018-07-13",
-        "DescribeUserCertificateList",
-        {
-          ShowSize: 50,
-          CurrentPage: i
-        }
-      );
+        for (const item of response.CertificateOrderList)
+          await callback(item);
 
-      for (const item of response.CertificateList)
-        await callback(item);
-
-      currentItems += response.CertificateList.length;
-      if (currentItems === response.TotalCount) break;
+        currentItems += response.CertificateOrderList.length;
+        if (currentItems === response.TotalCount) break;
+      }
     }
   }
 
   let foundId = 0;
   await listCertificates(async item => {
-    if (item.name === input.certificateName) {
-      foundId = item.id;
+    if (item.Name === input.certificateName) {
+      foundId = item.CertificateId;
     }
   });
 
@@ -104,7 +109,7 @@ async function deletePreviouslyDeployedCertificate() {
   console.log(`Found previously deployed certificate ${foundId}. Deleting.`);
 
   await callAliyunApi(
-    input.casEndpoint, "2018-07-13",
+    input.casEndpoint, "2020-04-07",
     "DeleteUserCertificate",
     {
       CertId: foundId
@@ -119,8 +124,8 @@ async function deployCertificate() {
   await deletePreviouslyDeployedCertificate();
 
   await callAliyunApi(
-    input.casEndpoint, "2018-07-13",
-    "CreateUserCertificate",
+    input.casEndpoint, "2020-04-07",
+    "UploadUserCertificate",
     {
       Cert: fullchain,
       Key: key,

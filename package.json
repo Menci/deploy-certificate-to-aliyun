@@ -11,6 +11,6 @@
   "license": "ISC",
   "dependencies": {
     "@actions/core": "^1.6.0",
-    "@alicloud/pop-core": "^1.7.10"
+    "@alicloud/pop-core": "^1.8.0"
   }
 }
