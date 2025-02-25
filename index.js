@@ -14,9 +14,12 @@ const input = {
   cdnDomains: core.getInput("cdn-domains"),
   timeout: parseInt(core.getInput("timeout")) || 10000,
   retry: parseInt(core.getInput("retry")) || 3,
-  casEndpoint: core.getInput("cas-endpoint") || "https://cas.ap-southeast-1.aliyuncs.com",
-  cdnEndpoint: core.getInput("cdn-endpoint") || "https://cdn.ap-southeast-1.aliyuncs.com"
+  useIntlEndpoint: core.getBooleanInput("use-intl-endpoint") || false
 };
+
+const baseDomain = input.useIntlEndpoint ? "ap-southeast-1.aliyuncs.com" : "aliyuncs.com";
+const casEndpoint = `https://cas.${baseDomain}`;
+const cdnEndpoint = `https://cdn.${baseDomain}`;
 
 /**
  * @param {string} endpoint
@@ -75,7 +78,7 @@ async function deletePreviouslyDeployedCertificate() {
          * @type {ListUserCertificateOrderResponse}
          */
         const response = await callAliyunApi(
-          input.casEndpoint, "2020-04-07",
+          casEndpoint, "2020-04-07",
           "ListUserCertificateOrder",
           {
             Status: status,
@@ -109,7 +112,7 @@ async function deletePreviouslyDeployedCertificate() {
   console.log(`Found previously deployed certificate ${foundId}. Deleting.`);
 
   await callAliyunApi(
-    input.casEndpoint, "2020-04-07",
+    casEndpoint, "2020-04-07",
     "DeleteUserCertificate",
     {
       CertId: foundId
@@ -117,14 +120,17 @@ async function deletePreviouslyDeployedCertificate() {
   );
 }
 
+/**
+ * @returns {Promise<number>} CertId
+ */
 async function deployCertificate() {
   const fullchain = fs.readFileSync(input.fullchainFile, "utf-8");
   const key = fs.readFileSync(input.keyFile, "utf-8");
 
   await deletePreviouslyDeployedCertificate();
 
-  await callAliyunApi(
-    input.casEndpoint, "2020-04-07",
+  const response = await callAliyunApi(
+    casEndpoint, "2020-04-07",
     "UploadUserCertificate",
     {
       Cert: fullchain,
@@ -132,32 +138,37 @@ async function deployCertificate() {
       Name: input.certificateName
     }
   );
+  return response.CertId;
 }
 
-async function deployCertificateToCdn() {
+/**
+ * @param {number} certId
+ */
+async function deployCertificateToCdn(certId) {
   const domains = Array.from(new Set(input.cdnDomains.split(/\s+/).filter(x => x)));
 
   for (const domain of domains) {
     console.log(`Deploying certificate to CDN domain ${domain}.`);
 
     await callAliyunApi(
-      input.cdnEndpoint, "2018-05-10",
-      "SetDomainServerCertificate",
+      cdnEndpoint, "2018-05-10",
+      "SetCdnDomainSSLCertificate",
       {
         DomainName: domain,
         CertName: input.certificateName,
+        CertId: certId,
         CertType: "cas",
-        ServerCertificateStatus: "on",
-        ForceSet: "1"
+        SSLProtocol: "on",
+        CertRegion: input.useIntlEndpoint ? "ap-southeast-1" : "cn-hangzhou"
       }
     );
   }
 }
 
 async function main() {
-  await deployCertificate();
-
-  if (input.cdnDomains) await deployCertificateToCdn();
+  const certId = await deployCertificate();
+  console.log(`Deployed certificate ${certId}.`);
+  if (input.cdnDomains) await deployCertificateToCdn(certId);
 }
 
 main().catch(error => {
